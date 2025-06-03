@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Syllables Quest - Choice Game</title>
+  <style>
+    body {
+      background: #181818;
+      color: #fff;
+      font-family: 'Determination Mono', 'Consolas', 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+    }
+    @font-face {
+      font-family: 'Determination Mono';
+      src: url('https://files.catbox.moe/9z1q2v.ttf');
+    }
+    .container {
+      max-width: 540px;
+      margin: 60px auto;
+      background: #111;
+      border: 4px solid #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+      padding: 0;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .undertale-header {
+      background: #222;
+      border-bottom: 2px solid #fff;
+      padding: 18px 32px 10px 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      font-size: 1.2em;
+      font-family: 'Determination Mono', monospace;
+    }
+    .undertale-heart {
+      color: #ff4f79;
+      font-size: 1.5em;
+      margin-right: 8px;
+      vertical-align: middle;
+      text-shadow: 0 0 6px #ff4f79, 0 0 2px #fff;
+    }
+    .undertale-score {
+      color: gold;
+      font-size: 1.1em;
+      margin-left: 16px;
+      font-family: inherit;
+    }
+    .undertale-status {
+      color: #ffb347;
+      margin-left: auto;
+      font-size: 1em;
+      font-family: inherit;
+    }
+    .undertale-main {
+      padding: 32px 32px 24px 32px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .question {
+      font-size: 1.3em;
+      margin: 0 0 32px 0;
+      color: #fff;
+      font-family: inherit;
+      text-align: center;
+      min-height: 48px;
+    }
+    .choices {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .choice-btn {
+      background: none;
+      color: #fff;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      font-size: 1.2em;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+      position: relative;
+      min-width: 220px;
+      text-align: left;
+    }
+    .choice-btn .choice-heart {
+      display: inline-block;
+      width: 32px;
+      text-align: center;
+      color: #ff4f79;
+      font-size: 1.2em;
+      opacity: 0;
+      transition: opacity 0.1s;
+      pointer-events: none;
+    }
+    .choice-btn.selected .choice-heart {
+      opacity: 1;
+      animation: undertale-heart-bounce 0.2s;
+    }
+    .choice-btn.selected {
+      color: #ffb347;
+      font-weight: bold;
+      text-shadow: 0 0 6px #ffb347, 0 0 2px #fff;
+    }
+    @keyframes undertale-heart-bounce {
+      0% { transform: scale(1.2);}
+      100% { transform: scale(1);}
+    }
+    .log {
+      background: #181818;
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 40px;
+      color: #eebbc3;
+      border: 1px solid #444;
+      margin: 0 32px 18px 32px;
+      font-size: 1em;
+      font-family: inherit;
+      text-align: center;
+    }
+    .restart-btn {
+      background: #ff4f79;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1em;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 0 auto 24px auto;
+      display: block;
+      transition: background 0.2s, color 0.2s;
+    }
+    .restart-btn:hover {
+      background: #fff;
+      color: #ff4f79;
+    }
+    /* Level select overlay */
+    .level-select-overlay {
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #181818ee;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .level-select-box {
+      background: #232323;
+      border: 4px solid #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 32px #000a;
+      padding: 40px 32px 32px 32px;
+      min-width: 320px;
+      text-align: center;
+      font-family: 'Determination Mono', monospace;
+      color: #ffb347;
+    }
+    .level-select-title {
+      font-size: 1.4em;
+      margin-bottom: 24px;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .level-select-btn {
+      background: #ffb347;
+      color: #232323;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 36px;
+      font-size: 1.1em;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 12px 0;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 2px 8px #000a;
+      letter-spacing: 1px;
+      display: block;
+      width: 100%;
+    }
+    .level-select-btn:hover, .level-select-btn.selected {
+      background: #fff;
+      color: #ffb347;
+    }
+    .progress-box {
+      background: #232323;
+      border: 2px solid #ffb347;
+      border-radius: 12px;
+      color: #ffb347;
+      padding: 12px 18px;
+      margin: 18px auto 0 auto;
+      max-width: 340px;
+      font-size: 1em;
+      text-align: center;
+      font-family: inherit;
+      box-shadow: 0 2px 8px #000a;
+    }
+    .progress-btn {
+      background: #ffb347;
+      color: #232323;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 1em;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 0 0 0;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 2px 8px #000a;
+      letter-spacing: 1px;
+      display: inline-block;
+    }
+    .progress-btn:hover {
+      background: #fff;
+      color: #ffb347;
+    }
+    /* Button group for Progress/Start/Quit */
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .undertale-btn {
+      background: #ffb347;
+      color: #232323;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1em;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 2px 8px #000a;
+      letter-spacing: 1px;
+    }
+    .undertale-btn:hover {
+      background: #fff;
+      color: #ffb347;
+    }
+    .undertale-btn.quit {
+      background: #ff4f79;
+      color: #fff;
+    }
+    .undertale-btn.quit:hover {
+      background: #fff;
+      color: #ff4f79;
+    }
+  </style>
+</head>
+<body>
+  <!-- Level Select Overlay -->
+  <div class="level-select-overlay" id="levelSelectOverlay">
+    <div class="level-select-box">
+      <div class="level-select-title">Choose Your Level</div>
+      <button class="level-select-btn" onclick="startGameAtLevel(0)">Level 1: Easy</button>
+      <button class="level-select-btn" onclick="startGameAtLevel(1)">Level 2: Challenge</button>
+      <button class="level-select-btn" onclick="startGameAtLevel(2)">Level 3: Hard</button>
+      <div id="progressBox" class="progress-box" style="display:none;">
+        <div id="progressMsg"></div>
+        <button class="progress-btn" onclick="continueProgress()">Continue</button>
+        <button class="progress-btn" onclick="clearProgress()">Clear Progress</button>
+      </div>
+    </div>
+  </div>
+  <div class="container" id="gameContainer" style="filter: blur(2px); pointer-events: none;">
+    <div class="undertale-header">
+      <span id="hearts"></span>
+      <span class="undertale-score" id="score"></span>
+      <span class="undertale-status" id="status"></span>
+    </div>
+    <div class="undertale-main">
+      <div class="btn-group">
+        <a href="savefile.html">
+          <button class="undertale-btn">Progress</button>
+        </a>
+        <a href="index.html">
+          <button class="undertale-btn">Start Game</button>
+        </a>
+        <a href="index.html">
+          <button class="undertale-btn quit">Quit</button>
+        </a>
+      </div>
+      <div class="question" id="question"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+    <div class="log" id="log"></div>
+    <button class="restart-btn" id="restartBtn" onclick="resetGame()" style="display:none;">Restart</button>
+  </div>
+  <script>
+    // --- Syllable Questions ---
+    const LEVELS = [
+      // Level 1
+      [
+        { word: "banana", syllables: 3 }, { word: "cat", syllables: 1 }, { word: "apple", syllables: 2 },
+        { word: "dog", syllables: 1 }, { word: "table", syllables: 2 }, { word: "window", syllables: 2 },
+        { word: "sun", syllables: 1 }, { word: "moon", syllables: 1 }, { word: "star", syllables: 1 },
+        { word: "river", syllables: 2 }, { word: "mountain", syllables: 2 }, { word: "tree", syllables: 1 },
+        { word: "flower", syllables: 2 }, { word: "grass", syllables: 1 }, { word: "cloud", syllables: 1 },
+        { word: "rain", syllables: 1 }, { word: "snow", syllables: 1 }, { word: "bird", syllables: 1 },
+        { word: "fish", syllables: 1 }, { word: "frog", syllables: 1 }
+      ],
+      // Level 2
+      [
+        { word: "computer", syllables: 3 }, { word: "syllable", syllables: 3 }, { word: "elephant", syllables: 3 },
+        { word: "university", syllables: 5 }, { word: "dictionary", syllables: 4 }, { word: "beautiful", syllables: 3 },
+        { word: "friendship", syllables: 2 }, { word: "adventure", syllables: 3 }, { word: "dragon", syllables: 2 },
+        { word: "imagination", syllables: 5 }, { word: "pencil", syllables: 2 }, { word: "notebook", syllables: 2 },
+        { word: "teacher", syllables: 2 }, { word: "student", syllables: 2 }, { word: "library", syllables: 3 },
+        { word: "science", syllables: 2 }, { word: "history", syllables: 3 }, { word: "mathematics", syllables: 4 },
+        { word: "geography", syllables: 4 }, { word: "astronomy", syllables: 4 }
+      ],
+      // Level 3 (Hard - longer, more complex words)
+      [
+        { word: "responsibility", syllables: 6 },
+        { word: "internationalization", syllables: 8 },
+        { word: "uncharacteristically", syllables: 8 },
+        { word: "misinterpretation", syllables: 7 },
+        { word: "photosynthesis", syllables: 5 },
+        { word: "extraordinary", syllables: 6 },
+        { word: "incomprehensible", syllables: 6 },
+        { word: "communication", syllables: 5 },
+        { word: "encyclopedia", syllables: 6 },
+        { word: "revolutionary", syllables: 6 },
+        { word: "mathematical", syllables: 5 },
+        { word: "psychological", syllables: 6 },
+        { word: "infrastructure", syllables: 5 },
+        { word: "multiplication", syllables: 5 },
+        { word: "pronunciation", syllables: 5 },
+        { word: "collaboration", syllables: 5 },
+        { word: "environmental", syllables: 6 },
+        { word: "individuality", syllables: 7 },
+        { word: "characterization", syllables: 7 },
+        { word: "institutionalization", syllables: 8 }
+      ]
+    ];
+
+    let hearts, score, logLines, gameOver, currentLevel = 0, usedQuestions = [], currentQuestion;
+    let selectedChoiceIdx = 0;
+    let currentChoices = [];
+
+    // --- Progress Save/Load ---
+    const PROGRESS_KEY = "syllables_quest_progress_v1";
+    function saveProgress() {
+      const progress = {
+        currentLevel,
+        hearts,
+        score,
+        usedQuestions,
+        logLines,
+        gameOver
+      };
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    }
+    function loadProgress() {
+      const data = localStorage.getItem(PROGRESS_KEY);
+      if (!data) return null;
+      try {
+        return JSON.parse(data);
+      } catch {
+        return null;
+      }
+    }
+    function clearProgress() {
+      localStorage.removeItem(PROGRESS_KEY);
+      document.getElementById('progressBox').style.display = 'none';
+    }
+    function continueProgress() {
+      const progress = loadProgress();
+      if (!progress) return;
+      currentLevel = progress.currentLevel;
+      hearts = progress.hearts;
+      score = progress.score;
+      usedQuestions = progress.usedQuestions;
+      logLines = progress.logLines;
+      gameOver = progress.gameOver;
+      document.getElementById('levelSelectOverlay').style.display = 'none';
+      document.getElementById('gameContainer').style.filter = '';
+      document.getElementById('gameContainer').style.pointerEvents = '';
+      document.getElementById('progressBox').style.display = 'none';
+      updateUI();
+      if (!gameOver) nextQuestion();
+    }
+
+    // Level select logic
+    function startGameAtLevel(levelIdx) {
+      currentLevel = levelIdx;
+      document.getElementById('levelSelectOverlay').style.display = 'none';
+      document.getElementById('gameContainer').style.filter = '';
+      document.getElementById('gameContainer').style.pointerEvents = '';
+      clearProgress();
+      resetGame();
+    }
+
+    function getAllSyllableAnswers(level) {
+      const set = new Set(LEVELS[level].map(q => q.syllables));
+      return Array.from(set);
+    }
+
+    function getRandomQuestion() {
+      const available = LEVELS[currentLevel].filter((q, idx) => !usedQuestions.includes(idx));
+      if (available.length === 0) return null;
+      const idx = Math.floor(Math.random() * available.length);
+      const realIdx = LEVELS[currentLevel].findIndex((q, i) => !usedQuestions.includes(i) && q.word === available[idx].word);
+      usedQuestions.push(realIdx);
+      return available[idx];
+    }
+
+    function getChoices(correct) {
+      let allAnswers = getAllSyllableAnswers(currentLevel);
+      allAnswers = allAnswers.filter(ans => ans !== correct);
+      while (allAnswers.length < 3) {
+        let rand = Math.floor(Math.random() * 8) + 1;
+        if (rand !== correct && !allAnswers.includes(rand)) allAnswers.push(rand);
+      }
+      let choices = [correct, ...allAnswers.slice(0, 3)];
+      for (let i = choices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [choices[i], choices[j]] = [choices[j], choices[i]];
+      }
+      return choices;
+    }
+
+    function resetGame() {
+      hearts = 3;
+      score = 0;
+      logLines = ["Welcome to Syllables Quest!"];
+      gameOver = false;
+      usedQuestions = [];
+      selectedChoiceIdx = 0;
+      document.getElementById('restartBtn').style.display = "none";
+      nextQuestion();
+      updateUI();
+      saveProgress();
+    }
+
+    function nextQuestion() {
+      if (usedQuestions.length >= LEVELS[currentLevel].length) {
+        if (currentLevel < LEVELS.length - 1) {
+          logLines.push(`<span style="color:gold;">Level ${currentLevel + 1} complete! Proceeding to Level ${currentLevel + 2}.</span>`);
+          currentLevel++;
+          usedQuestions = [];
+          selectedChoiceIdx = 0;
+          setTimeout(() => {
+            nextQuestion();
+            updateUI();
+            saveProgress();
+          }, 1200);
+          updateUI();
+          saveProgress();
+          return;
+        } else {
+          logLines.push(`<span style="color:lightgreen;">Congratulations! You finished all levels! Final score: ${score}</span>`);
+          document.getElementById('choices').innerHTML = "";
+          document.getElementById('restartBtn').style.display = "";
+          gameOver = true;
+          updateUI();
+          saveProgress();
+          return;
+        }
+      }
+      currentQuestion = getRandomQuestion();
+      if (!currentQuestion) return;
+      currentChoices = getChoices(currentQuestion.syllables);
+      selectedChoiceIdx = 0;
+      renderChoices();
+      document.getElementById('question').innerHTML =
+        `Level ${currentLevel + 1} - Word ${usedQuestions.length}/${LEVELS[currentLevel].length}:<br>How many syllables are in <strong>${currentQuestion.word}</strong>?`;
+      saveProgress();
+    }
+
+    function renderChoices() {
+      let html = "";
+      currentChoices.forEach((choice, idx) => {
+        html += `<button class="choice-btn${selectedChoiceIdx === idx ? ' selected' : ''}" 
+          onclick="choose(${choice})" 
+          onmouseover="setSelected(${idx})">
+          <span class="choice-heart">${selectedChoiceIdx === idx ? "&#10084;" : ""}</span> ${choice}
+        </button>`;
+      });
+      document.getElementById('choices').innerHTML = html;
+    }
+
+    function setSelected(idx) {
+      selectedChoiceIdx = idx;
+      renderChoices();
+    }
+
+    function choose(selected) {
+      if (gameOver) return;
+      if (selected === currentQuestion.syllables) {
+        score += 20;
+        logLines.push(`<span style="color:lightgreen;">Correct! +20 points.</span>`);
+      } else {
+        hearts--;
+        logLines.push(`<span style="color:#ff4f79;">Wrong! The answer was ${currentQuestion.syllables}. -1 heart.</span>`);
+      }
+      if (hearts <= 0) {
+        logLines.push(`<span style="color:#ff4f79;">Game Over! Your final score: ${score}</span>`);
+        document.getElementById('choices').innerHTML = "";
+        document.getElementById('restartBtn').style.display = "";
+        gameOver = true;
+      } else {
+        nextQuestion();
+      }
+      updateUI();
+      saveProgress();
+    }
+
+    function updateUI() {
+      // Hearts
+      let heartStr = "";
+      for (let i = 0; i < hearts; i++) heartStr += `<span class="undertale-heart">&#10084;</span>`;
+      document.getElementById('hearts').innerHTML = heartStr;
+      document.getElementById('score').textContent = "Score: " + score;
+      document.getElementById('log').innerHTML = logLines.slice(-3).join("<br>");
+      document.getElementById('status').textContent = gameOver ? "Game Over!" : "";
+      // Re-render choices for keyboard navigation
+      if (!gameOver && currentChoices.length) renderChoices();
+    }
+
+    // Keyboard navigation for Undertale-style selection
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('levelSelectOverlay').style.display !== 'none') return;
+      if (gameOver || !currentChoices.length) return;
+      if (e.key === "ArrowUp" || e.key === "w") {
+        selectedChoiceIdx = (selectedChoiceIdx - 1 + currentChoices.length) % currentChoices.length;
+        renderChoices();
+        e.preventDefault();
+      }
+      if (e.key === "ArrowDown" || e.key === "s") {
+        selectedChoiceIdx = (selectedChoiceIdx + 1) % currentChoices.length;
+        renderChoices();
+        e.preventDefault();
+      }
+      if (e.key === "Enter" || e.key === " ") {
+        choose(currentChoices[selectedChoiceIdx]);
+        e.preventDefault();
+      }
+    });
+
+    // On load, show level select and blur game, and check for progress
+    window.onload = function() {
+      const progress = loadProgress();
+      if (progress && !progress.gameOver) {
+        document.getElementById('progressBox').style.display = '';
+        document.getElementById('progressMsg').innerHTML =
+          `You have unfinished progress:<br>
+          <b>Level:</b> ${progress.currentLevel + 1} &nbsp; <b>Score:</b> ${progress.score} &nbsp; <b>Hearts:</b> ${progress.hearts}`;
+      } else {
+        document.getElementById('progressBox').style.display = 'none';
+      }
+      document.getElementById('levelSelectOverlay').style.display = '';
+      document.getElementById('gameContainer').style.filter = 'blur(2px)';
+      document.getElementById('gameContainer').style.pointerEvents = 'none';
+    };
+  </script>
+</body>
+</html>

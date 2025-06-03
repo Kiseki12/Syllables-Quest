@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Syllables Quest - Progress</title>
+  <style>
+    body {
+      background: #181818;
+      color: #fff;
+      font-family: 'Determination Mono', 'Consolas', 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+    }
+    @font-face {
+      font-family: 'Determination Mono';
+      src: url('https://files.catbox.moe/9z1q2v.ttf');
+    }
+    .container {
+      max-width: 540px;
+      margin: 60px auto;
+      background: #111;
+      border: 4px solid #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+      padding: 0 0 32px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .undertale-header {
+      background: #222;
+      border-bottom: 2px solid #fff;
+      padding: 24px 32px 16px 32px;
+      font-size: 1.5em;
+      font-family: 'Determination Mono', monospace;
+      color: #ffb347;
+      letter-spacing: 2px;
+    }
+    .progress-table {
+      width: 90%;
+      margin: 32px auto 0 auto;
+      border-collapse: collapse;
+      background: #181818;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 1.1em;
+    }
+    .progress-table th, .progress-table td {
+      border: 1px solid #444;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .progress-table th {
+      background: #232323;
+      color: #ffb347;
+      font-weight: bold;
+    }
+    .progress-table td {
+      background: #181818;
+      color: #fff;
+    }
+    .level-name {
+      color: #ffb347;
+      font-weight: bold;
+    }
+    .btn {
+      background: #ffb347;
+      color: #232323;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1em;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 24px 8px 0 8px;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 2px 8px #000a;
+      letter-spacing: 1px;
+    }
+    .btn:hover {
+      background: #fff;
+      color: #ffb347;
+    }
+    .note {
+      color: #eebbc3;
+      margin-top: 18px;
+      font-size: 0.98em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="undertale-header">
+      Syllables Quest<br>Game Progress
+    </div>
+    <table class="progress-table" id="progressTable">
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Status</th>
+          <th>Score</th>
+          <th>Hearts Left</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Progress rows will be inserted here -->
+      </tbody>
+    </table>
+    <button class="btn" onclick="window.location.href='game.html'">Back to Game</button>
+    <button class="btn" onclick="clearProgress()">Clear Progress</button>
+    <div class="note" id="note"></div>
+  </div>
+  <script>
+    // Level names (should match your game.html)
+    const LEVEL_NAMES = [
+      "Level 1: Easy",
+      "Level 2: Challenge",
+      "Level 3: Hard"
+    ];
+    // Get progress from localStorage
+    const PROGRESS_KEY = "syllables_quest_progress_v1";
+    function getProgress() {
+      const data = localStorage.getItem(PROGRESS_KEY);
+      if (!data) return null;
+      try {
+        return JSON.parse(data);
+      } catch {
+        return null;
+      }
+    }
+    function clearProgress() {
+      localStorage.removeItem(PROGRESS_KEY);
+      renderProgress();
+      document.getElementById('note').textContent = "Progress cleared!";
+    }
+    function renderProgress() {
+      const progress = getProgress();
+      const tbody = document.querySelector("#progressTable tbody");
+      tbody.innerHTML = "";
+      let finished = false;
+      if (!progress) {
+        for (let i = 0; i < LEVEL_NAMES.length; i++) {
+          tbody.innerHTML += `
+            <tr>
+              <td class="level-name">${LEVEL_NAMES[i]}</td>
+              <td>Not started</td>
+              <td>0</td>
+              <td>3</td>
+            </tr>
+          `;
+        }
+        document.getElementById('note').textContent = "No progress found. Play the game to start tracking your progress!";
+        return;
+      }
+      for (let i = 0; i < LEVEL_NAMES.length; i++) {
+        let status = "Not started", score = 0, hearts = 3;
+        if (progress.currentLevel > i) {
+          status = "Completed";
+          score = 20 * LEVEL_NAMES.length * (i + 1); // Estimate, or you can store per-level score
+          hearts = 3;
+        } else if (progress.currentLevel === i) {
+          if (progress.gameOver) {
+            status = "Game Over";
+            score = progress.score;
+            hearts = 0;
+          } else {
+            status = "In Progress";
+            score = progress.score;
+            hearts = progress.hearts;
+          }
+        }
+        tbody.innerHTML += `
+          <tr>
+            <td class="level-name">${LEVEL_NAMES[i]}</td>
+            <td>${status}</td>
+            <td>${score}</td>
+            <td>${hearts}</td>
+          </tr>
+        `;
+        if (progress.currentLevel === i && progress.gameOver) finished = true;
+      }
+      if (finished && progress.currentLevel === LEVEL_NAMES.length - 1) {
+        document.getElementById('note').textContent = "Congratulations! You finished all levels!";
+      } else {
+        document.getElementById('note').textContent = "";
+      }
+    }
+    renderProgress();
+  </script>
+</body>
+</html>
