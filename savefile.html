@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Syllables Quest - Progress</title>
+  <title>Syllables Quest</title>
   <style>
     body {
       background: #181818;
@@ -10,6 +10,7 @@
       font-family: 'Determination Mono', 'Consolas', 'Courier New', monospace;
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
     @font-face {
       font-family: 'Determination Mono';
@@ -17,176 +18,224 @@
     }
     .container {
       max-width: 540px;
-      margin: 60px auto;
+      margin: 80px auto;
       background: #111;
       border: 4px solid #fff;
       border-radius: 12px;
       box-shadow: 0 4px 32px rgba(0,0,0,0.4);
-      padding: 0 0 32px 0;
+      padding: 0;
       text-align: center;
       position: relative;
       overflow: hidden;
+      z-index: 2;
     }
     .undertale-header {
       background: #222;
       border-bottom: 2px solid #fff;
       padding: 24px 32px 16px 32px;
-      font-size: 1.5em;
+      font-size: 1.6em;
       font-family: 'Determination Mono', monospace;
       color: #ffb347;
       letter-spacing: 2px;
     }
-    .progress-table {
-      width: 90%;
-      margin: 32px auto 0 auto;
-      border-collapse: collapse;
-      background: #181818;
-      border-radius: 8px;
-      overflow: hidden;
-      font-size: 1.1em;
+    .undertale-main {
+      padding: 40px 32px 32px 32px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    .progress-table th, .progress-table td {
-      border: 1px solid #444;
-      padding: 12px 8px;
-      text-align: center;
-    }
-    .progress-table th {
-      background: #232323;
-      color: #ffb347;
-      font-weight: bold;
-    }
-    .progress-table td {
-      background: #181818;
-      color: #fff;
-    }
-    .level-name {
-      color: #ffb347;
-      font-weight: bold;
-    }
-    .btn {
+    .undertale-btn {
       background: #ffb347;
       color: #232323;
       border: none;
       border-radius: 8px;
-      padding: 10px 24px;
-      font-size: 1em;
+      padding: 16px 48px;
+      font-size: 1.2em;
       font-family: inherit;
       font-weight: bold;
       cursor: pointer;
-      margin: 24px 8px 0 8px;
+      margin: 18px 0;
       transition: background 0.2s, color 0.2s;
       box-shadow: 0 2px 8px #000a;
       letter-spacing: 1px;
     }
-    .btn:hover {
+    .undertale-btn:hover {
       background: #fff;
       color: #ffb347;
     }
-    .note {
+    .undertale-desc {
       color: #eebbc3;
-      margin-top: 18px;
-      font-size: 0.98em;
+      font-size: 1.1em;
+      margin-bottom: 32px;
+      margin-top: 12px;
+      font-family: inherit;
+    }
+    .anime-girl-side {
+      position: fixed;
+      right: 2vw;
+      bottom: 0;
+      width: 340px;
+      height: 480px;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    #anime-canvas {
+      width: 340px !important;
+      height: 480px !important;
+      min-width: 220px;
+      min-height: 320px;
+      max-width: 90vw;
+      max-height: 90vh;
+      background: transparent;
+      display: block;
+      pointer-events: none;
+      border: none;
+    }
+    /* 3D model container */
+    .model-side {
+      position: fixed;
+      left: 2vw;
+      bottom: 0;
+      width: 340px;
+      height: 480px;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    #model-canvas {
+      width: 340px !important;
+      height: 480px !important;
+      min-width: 220px;
+      min-height: 320px;
+      max-width: 90vw;
+      max-height: 90vh;
+      background: transparent;
+      display: block;
+      pointer-events: none;
+      border: none;
+    }
+    .speech-bubble {
+      position: absolute;
+      right: 340px;
+      bottom: 120px;
+      background: #fff;
+      color: #232323;
+      border-radius: 18px;
+      border: 3px solid #ffb347;
+      padding: 18px 28px;
+      font-size: 1.1em;
+      font-family: inherit;
+      min-width: 180px;
+      max-width: 320px;
+      box-shadow: 0 2px 12px #000a;
+      z-index: 11;
+      text-align: left;
+      animation: popin 0.5s;
+      pointer-events: auto;
+    }
+    @keyframes popin {
+      0% { transform: scale(0.7); opacity: 0;}
+      100% { transform: scale(1); opacity: 1;}
+    }
+    .speech-bubble::after {
+      content: "";
+      position: absolute;
+      right: -24px;
+      bottom: 24px;
+      border-width: 12px 0 12px 24px;
+      border-style: solid;
+      border-color: transparent transparent transparent #fff;
+      filter: drop-shadow(0 0 2px #ffb347);
+    }
+    @media (max-width: 900px) {
+      .anime-girl-side, .model-side { width: 180px; height: 260px; }
+      #anime-canvas, #model-canvas { width: 180px !important; height: 260px !important; }
+      .speech-bubble { right: 180px; min-width: 120px; max-width: 180px; font-size: 0.95em; }
+    }
+    @media (max-width: 600px) {
+      .container { max-width: 98vw; }
+      .undertale-header, .undertale-main { padding-left: 8px; padding-right: 8px; }
+      .anime-girl-side, .model-side { display: none; }
+      .speech-bubble { display: none; }
     }
   </style>
 </head>
 <body>
+  <!-- Anime Girl Side Panel -->
+  <div class="anime-girl-side">
+    <canvas id="anime-canvas"></canvas>
+    <div class="speech-bubble" id="speechBubble"></div>
+  </div>
+  <!-- 3D Model Side Panel -->
+  <div class="model-side">
+    <canvas id="model-canvas"></canvas>
+  </div>
+  <!-- Loader Overlay -->
+  <div class="loader-bg" id="loaderBg">
+    <div>
+      <div class="loader"></div>
+      <div class="loader-text">Loading Syllables Quest...</div>
+    </div>
+  </div>
   <div class="container">
     <div class="undertale-header">
-      Syllables Quest<br>Game Progress
+      Syllables Quest
     </div>
-    <table class="progress-table" id="progressTable">
-      <thead>
-        <tr>
-          <th>Level</th>
-          <th>Status</th>
-          <th>Score</th>
-          <th>Hearts Left</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Progress rows will be inserted here -->
-      </tbody>
-    </table>
-    <button class="btn" onclick="window.location.href='game.html'">Back to Game</button>
-    <button class="btn" onclick="clearProgress()">Clear Progress</button>
-    <div class="note" id="note"></div>
+    <div class="undertale-main">
+      <div class="undertale-desc">
+        Test your knowledge of syllables in this quiz adventure.<br>
+        <span style="color:#ff4f79;">Can you clear all the levels?</span>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 12px;">
+        <a href="savefile.html">
+          <button class="undertale-btn">Progress</button>
+        </a>
+        <a href="game.html" onclick="localStorage.setItem('bgMusicContinue','1')">
+          <button class="undertale-btn">Start Game</button>
+        </a>
+      </div>
+      <div style="margin-top:24px; color:#888; font-size:0.95em;">
+        &copy; 2025 -Gelo<br>
+        <span style="font-size:0.9em;">Created for educational purposes</span>
+      </div>
+    </div>
   </div>
+  <!-- Background music for index page -->
+  <audio id="bgMusic" src="Snowdine.mp3" autoplay loop></audio>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/GLTFLoader.js"></script>
   <script>
-    // Level names (should match your game.html)
-    const LEVEL_NAMES = [
-      "Level 1: Easy",
-      "Level 2: Challenge",
-      "Level 3: Hard"
-    ];
-    // Get progress from localStorage
-    const PROGRESS_KEY = "syllables_quest_progress_v1";
-    function getProgress() {
-      const data = localStorage.getItem(PROGRESS_KEY);
-      if (!data) return null;
-      try {
-        return JSON.parse(data);
-      } catch {
-        return null;
+    // --- AUDIO AUTOPLAY FIX ---
+    // Try to autoplay on load, and also on first user interaction (for browser policies)
+    function tryPlayBgMusic() {
+      const bg = document.getElementById('bgMusic');
+      if (bg) {
+        bg.volume = 0.5;
+        bg.play().catch(() => {});
       }
     }
-    function clearProgress() {
-      localStorage.removeItem(PROGRESS_KEY);
-      renderProgress();
-      document.getElementById('note').textContent = "Progress cleared!";
-    }
-    function renderProgress() {
-      const progress = getProgress();
-      const tbody = document.querySelector("#progressTable tbody");
-      tbody.innerHTML = "";
-      let finished = false;
-      if (!progress) {
-        for (let i = 0; i < LEVEL_NAMES.length; i++) {
-          tbody.innerHTML += `
-            <tr>
-              <td class="level-name">${LEVEL_NAMES[i]}</td>
-              <td>Not started</td>
-              <td>0</td>
-              <td>3</td>
-            </tr>
-          `;
-        }
-        document.getElementById('note').textContent = "No progress found. Play the game to start tracking your progress!";
-        return;
-      }
-      for (let i = 0; i < LEVEL_NAMES.length; i++) {
-        let status = "Not started", score = 0, hearts = 3;
-        if (progress.currentLevel > i) {
-          status = "Completed";
-          score = 20 * LEVEL_NAMES.length * (i + 1); // Estimate, or you can store per-level score
-          hearts = 3;
-        } else if (progress.currentLevel === i) {
-          if (progress.gameOver) {
-            status = "Game Over";
-            score = progress.score;
-            hearts = 0;
-          } else {
-            status = "In Progress";
-            score = progress.score;
-            hearts = progress.hearts;
-          }
-        }
-        tbody.innerHTML += `
-          <tr>
-            <td class="level-name">${LEVEL_NAMES[i]}</td>
-            <td>${status}</td>
-            <td>${score}</td>
-            <td>${hearts}</td>
-          </tr>
-        `;
-        if (progress.currentLevel === i && progress.gameOver) finished = true;
-      }
-      if (finished && progress.currentLevel === LEVEL_NAMES.length - 1) {
-        document.getElementById('note').textContent = "Congratulations! You finished all levels!";
-      } else {
-        document.getElementById('note').textContent = "";
-      }
-    }
-    renderProgress();
+    window.addEventListener('load', function() {
+      setTimeout(() => {
+        document.getElementById('loaderBg').style.opacity = 0;
+        setTimeout(() => {
+          document.getElementById('loaderBg').style.display = 'none';
+        }, 600);
+      }, 1200);
+      tryPlayBgMusic();
+    });
+    // Fallback: play on first user interaction if blocked
+    document.addEventListener('pointerdown', function playOnce() {
+      tryPlayBgMusic();
+      document.removeEventListener('pointerdown', playOnce);
+    });
   </script>
 </body>
 </html>
