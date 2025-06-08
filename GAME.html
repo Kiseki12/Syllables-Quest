@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Syllables Quest - Choice Game</title>
+  <title>Syllables Quest</title>
   <style>
     body {
       background: #181818;
@@ -194,7 +194,13 @@
       display: block;
       width: 100%;
     }
-    .level-select-btn:hover, .level-select-btn.selected {
+    .level-select-btn:disabled {
+      background: #444;
+      color: #888;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .level-select-btn:hover:not(:disabled), .level-select-btn.selected:not(:disabled) {
       background: #fff;
       color: #ffb347;
     }
@@ -271,9 +277,11 @@
   <div class="level-select-overlay" id="levelSelectOverlay">
     <div class="level-select-box">
       <div class="level-select-title">Choose Your Level</div>
-      <button class="level-select-btn" onclick="startGameAtLevel(0)">Level 1: Easy</button>
-      <button class="level-select-btn" onclick="startGameAtLevel(1)">Level 2: Challenge</button>
-      <button class="level-select-btn" onclick="startGameAtLevel(2)">Level 3: Hard</button>
+      <button class="level-select-btn" id="levelBtn0" onclick="startGameAtLevel(0)">Level 1: Easy</button>
+      <button class="level-select-btn" id="levelBtn1" onclick="startGameAtLevel(1)" disabled>Level 2: Challenge</button>
+      <button class="level-select-btn" id="levelBtn2" onclick="startGameAtLevel(2)" disabled>Level 3: Hard</button>
+      <button class="level-select-btn" id="levelBtn3" onclick="startGameAtLevel(3)" disabled>Level 4: Impossible</button>
+      <button class="level-select-btn" id="levelBtn4" onclick="startGameAtLevel(4)" disabled>Level 5: Save the World</button>
       <div id="progressBox" class="progress-box" style="display:none;">
         <div id="progressMsg"></div>
         <button class="progress-btn" onclick="continueProgress()">Continue</button>
@@ -304,8 +312,37 @@
     </div>
     <div class="log" id="log"></div>
     <button class="restart-btn" id="restartBtn" onclick="resetGame()" style="display:none;">Restart</button>
+    <!-- Audio element for level music -->
+    <audio id="levelAudio" loop></audio>
   </div>
   <script>
+    const LEVEL_MUSIC = [
+      "Toriel.mp3", // Level 1
+      "Undyne.mp3", // Level 2
+      "Papyrus.mp3", // Level 3
+      "Sns.mp3", // Level 4
+      "His theme.mp3"  // Level 5
+    ];
+
+    // --- Audio logic ---
+    let currentAudioLevel = null;
+    const audioElem = document.getElementById('levelAudio');
+
+    function playLevelMusic(levelIdx) {
+      if (LEVEL_MUSIC[levelIdx]) {
+        audioElem.pause();
+        audioElem.currentTime = 0;
+        audioElem.src = LEVEL_MUSIC[levelIdx];
+        audioElem.currentTime = 0;
+        audioElem.play().catch(()=>{});
+        currentAudioLevel = levelIdx;
+      } else {
+        audioElem.pause();
+        audioElem.src = "";
+        currentAudioLevel = null;
+      }
+    }
+
     // --- Syllable Questions ---
     const LEVELS = [
       // Level 1
@@ -342,16 +379,67 @@
         { word: "revolutionary", syllables: 6 },
         { word: "mathematical", syllables: 5 },
         { word: "psychological", syllables: 6 },
-        { word: "infrastructure", syllables: 5 },
+        { word: "infrastructure", syllables: 4 },
         { word: "multiplication", syllables: 5 },
         { word: "pronunciation", syllables: 5 },
         { word: "collaboration", syllables: 5 },
-        { word: "environmental", syllables: 6 },
+        { word: "environmental", syllables: 5 },
         { word: "individuality", syllables: 7 },
         { word: "characterization", syllables: 7 },
         { word: "institutionalization", syllables: 8 }
+      ],
+      // Level 4 (Impossible)
+      [
+        { word: "internationalization", syllables: 8 },
+        { word: "uncharacteristically", syllables: 8 },
+        { word: "counterrevolutionaries", syllables: 9 },
+        { word: "institutionalization", syllables: 8 },
+        { word: "disproportionately", syllables: 6 },
+        { word: "unconstitutionality", syllables: 8 },
+        { word: "unintelligibility", syllables: 8 },
+        { word: "misinterpretation", syllables: 6 },
+        { word: "characterization", syllables: 6 },
+        { word: "psychopharmacological", syllables: 8 }
+      ],
+      // Level 5 (Save the World - 10-20 syllables)
+      [
+        { word: "pneumonoultramicroscopicsilicovolcanoconiosis", syllables: 19 },
+        { word: "hippopotomonstrosesquipedaliophobia", syllables: 15 },
+        { word: "floccinaucinihilipilification", syllables: 12 },
+        { word: "antidisestablishmentarianism", syllables: 11 },
+        { word: "electroencephalographically", syllables: 12 },
+        { word: "thyroparathyroidectomized", syllables: 11 },
+        { word: "psychoneuroendocrinological", syllables: 13 },
+        { word: "radioimmunoelectrophoresis", syllables: 12 },
+        { word: "spectrophotofluorometrically", syllables: 13 },
+        { word: "immunoelectrophoretically", syllables: 12 }
       ]
     ];
+
+    // --- Level unlock logic ---
+    const LEVEL_UNLOCK_KEY = "syllables_quest_level_unlocks";
+    function getLevelUnlocks() {
+      let unlocks = [true, false, false, false, false];
+      try {
+        const saved = JSON.parse(localStorage.getItem(LEVEL_UNLOCK_KEY));
+        if (Array.isArray(saved) && saved.length === LEVELS.length) unlocks = saved;
+      } catch {}
+      return unlocks;
+    }
+    function setLevelUnlock(levelIdx) {
+      let unlocks = getLevelUnlocks();
+      if (levelIdx + 1 < unlocks.length) unlocks[levelIdx + 1] = true;
+      localStorage.setItem(LEVEL_UNLOCK_KEY, JSON.stringify(unlocks));
+    }
+    function updateLevelButtons() {
+      const unlocks = getLevelUnlocks();
+      for (let i = 0; i < LEVELS.length; i++) {
+        const btn = document.getElementById('levelBtn' + i);
+        if (btn) {
+          btn.disabled = !unlocks[i];
+        }
+      }
+    }
 
     let hearts, score, logLines, gameOver, currentLevel = 0, usedQuestions = [], currentQuestion;
     let selectedChoiceIdx = 0;
@@ -397,6 +485,7 @@
       document.getElementById('gameContainer').style.pointerEvents = '';
       document.getElementById('progressBox').style.display = 'none';
       updateUI();
+      playLevelMusic(currentLevel);
       if (!gameOver) nextQuestion();
     }
 
@@ -408,6 +497,10 @@
       document.getElementById('gameContainer').style.pointerEvents = '';
       clearProgress();
       resetGame();
+      // Ensure audio starts after user interaction and UI is ready
+      setTimeout(() => {
+        playLevelMusic(levelIdx);
+      }, 100);
     }
 
     function getAllSyllableAnswers(level) {
@@ -440,7 +533,7 @@
     }
 
     function resetGame() {
-      hearts = 3;
+      hearts = 5; 
       score = 0;
       logLines = ["Welcome to Syllables Quest!"];
       gameOver = false;
@@ -450,10 +543,14 @@
       nextQuestion();
       updateUI();
       saveProgress();
+      // Ensure level music always plays on restart
+      playLevelMusic(currentLevel);
     }
 
     function nextQuestion() {
       if (usedQuestions.length >= LEVELS[currentLevel].length) {
+        setLevelUnlock(currentLevel); // Unlock next level
+        updateLevelButtons();
         if (currentLevel < LEVELS.length - 1) {
           logLines.push(`<span style="color:gold;">Level ${currentLevel + 1} complete! Proceeding to Level ${currentLevel + 2}.</span>`);
           currentLevel++;
@@ -463,9 +560,11 @@
             nextQuestion();
             updateUI();
             saveProgress();
+            playLevelMusic(currentLevel);
           }, 1200);
           updateUI();
           saveProgress();
+          playLevelMusic(currentLevel);
           return;
         } else {
           logLines.push(`<span style="color:lightgreen;">Congratulations! You finished all levels! Final score: ${score}</span>`);
@@ -474,6 +573,8 @@
           gameOver = true;
           updateUI();
           saveProgress();
+          saveToSavefile();
+          audioElem.pause();
           return;
         }
       }
@@ -518,6 +619,9 @@
         document.getElementById('choices').innerHTML = "";
         document.getElementById('restartBtn').style.display = "";
         gameOver = true;
+        saveProgress();
+        saveToSavefile();
+        audioElem.pause();
       } else {
         nextQuestion();
       }
@@ -557,8 +661,26 @@
       }
     });
 
+    // Save summary to savefile.html (localStorage key)
+    function saveToSavefile() {
+      let savefile = [];
+      try {
+        savefile = JSON.parse(localStorage.getItem('syllables_quest_savefile') || '[]');
+      } catch {}
+      savefile.push({
+        date: new Date().toISOString(),
+        score: score,
+        level: currentLevel + 1,
+        status: hearts <= 0 ? "Game Over" : "Completed",
+        hearts: hearts,
+        log: logLines.slice(-5)
+      });
+      localStorage.setItem('syllables_quest_savefile', JSON.stringify(savefile));
+    }
+
     // On load, show level select and blur game, and check for progress
     window.onload = function() {
+      updateLevelButtons();
       const progress = loadProgress();
       if (progress && !progress.gameOver) {
         document.getElementById('progressBox').style.display = '';
@@ -572,6 +694,11 @@
       document.getElementById('gameContainer').style.filter = 'blur(2px)';
       document.getElementById('gameContainer').style.pointerEvents = 'none';
     };
+
+    // Pause audio when leaving the page
+    window.addEventListener('beforeunload', function() {
+      audioElem.pause();
+    });
   </script>
 </body>
 </html>
