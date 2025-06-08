@@ -96,6 +96,31 @@
       pointer-events: none;
       border: none;
     }
+    /* 3D model container */
+    .model-side {
+      position: fixed;
+      left: 2vw;
+      bottom: 0;
+      width: 340px;
+      height: 480px;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    #model-canvas {
+      width: 340px !important;
+      height: 480px !important;
+      min-width: 220px;
+      min-height: 320px;
+      max-width: 90vw;
+      max-height: 90vh;
+      background: transparent;
+      display: block;
+      pointer-events: none;
+      border: none;
+    }
     .speech-bubble {
       position: absolute;
       right: 340px;
@@ -130,14 +155,14 @@
       filter: drop-shadow(0 0 2px #ffb347);
     }
     @media (max-width: 900px) {
-      .anime-girl-side { width: 180px; height: 260px; }
-      #anime-canvas { width: 180px !important; height: 260px !important; }
+      .anime-girl-side, .model-side { width: 180px; height: 260px; }
+      #anime-canvas, #model-canvas { width: 180px !important; height: 260px !important; }
       .speech-bubble { right: 180px; min-width: 120px; max-width: 180px; font-size: 0.95em; }
     }
     @media (max-width: 600px) {
       .container { max-width: 98vw; }
       .undertale-header, .undertale-main { padding-left: 8px; padding-right: 8px; }
-      .anime-girl-side { display: none; }
+      .anime-girl-side, .model-side { display: none; }
       .speech-bubble { display: none; }
     }
   </style>
@@ -147,6 +172,10 @@
   <div class="anime-girl-side">
     <canvas id="anime-canvas"></canvas>
     <div class="speech-bubble" id="speechBubble"></div>
+  </div>
+  <!-- 3D Model Side Panel -->
+  <div class="model-side">
+    <canvas id="model-canvas"></canvas>
   </div>
   <!-- Loader Overlay -->
   <div class="loader-bg" id="loaderBg">
@@ -164,20 +193,35 @@
         Test your knowledge of syllables in this quiz adventure.<br>
         <span style="color:#ff4f79;">Can you clear all the levels?</span>
       </div>
-      <a href="GAME.html">
-        <button class="undertale-btn">Start Game</button>
-      </a>
+      <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 12px;">
+        <a href="savefile.html">
+          <button class="undertale-btn">Progress</button>
+        </a>
+        <a href="game.html" onclick="localStorage.setItem('bgMusicContinue','1')">
+          <button class="undertale-btn">Start Game</button>
+        </a>
+      </div>
       <div style="margin-top:24px; color:#888; font-size:0.95em;">
-        &copy; 2025 Syllables Quest<br>
-        <span style="font-size:0.9em;">Created for educational fun!</span>
+        &copy; 2025 -Gelo<br>
+        <span style="font-size:0.9em;">Created for educational purposes</span>
       </div>
     </div>
   </div>
+  <!-- Background music for index page -->
+  <audio id="bgMusic" src="Snowdine.mp3" autoplay loop></audio>
   <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/GLTFLoader.js"></script>
   <script>
-    // Loader fade out
+    // --- AUDIO AUTOPLAY FIX ---
+    // Try to autoplay on load, and also on first user interaction (for browser policies)
+    function tryPlayBgMusic() {
+      const bg = document.getElementById('bgMusic');
+      if (bg) {
+        bg.volume = 0.5;
+        bg.play().catch(() => {});
+      }
+    }
     window.addEventListener('load', function() {
       setTimeout(() => {
         document.getElementById('loaderBg').style.opacity = 0;
@@ -185,77 +229,13 @@
           document.getElementById('loaderBg').style.display = 'none';
         }, 600);
       }, 1200);
+      tryPlayBgMusic();
     });
-
-    // 3D Anime Girl on the side
-    let scene, camera, renderer, mixer, model, clock;
-    function initAnime3D() {
-      const canvas = document.getElementById('anime-canvas');
-      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      renderer.setClearColor(0x000000, 0);
-      renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(30, canvas.offsetWidth / canvas.offsetHeight, 0.1, 1000);
-      camera.position.set(0.7, 1.5, 2.5);
-
-      // Lighting
-      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-      hemiLight.position.set(0, 2, 0);
-      scene.add(hemiLight);
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      dirLight.position.set(2, 4, 2);
-      scene.add(dirLight);
-
-
-        if (gltf.animations && gltf.animations.length) {
-          mixer = new THREE.AnimationMixer(model);
-          mixer.clipAction(gltf.animations[0]).play();
-        }
-      };
-
-      // Animate
-      clock = new THREE.Clock();
-      function animate() {
-        requestAnimationFrame(animate);
-        if (mixer) mixer.update(clock.getDelta());
-        // Subtle idle movement
-        if (model) {
-          model.rotation.y = Math.sin(clock.getElapsedTime() * 0.5) * 0.15;
-        }
-        renderer.render(scene, camera);
-      }
-      animate();
-    
-    window.addEventListener('resize', () => {
-      const canvas = document.getElementById('anime-canvas');
-      if (renderer && camera) {
-        renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-        camera.aspect = canvas.offsetWidth / canvas.offsetHeight;
-        camera.updateProjectionMatrix();
-      }
+    // Fallback: play on first user interaction if blocked
+    document.addEventListener('pointerdown', function playOnce() {
+      tryPlayBgMusic();
+      document.removeEventListener('pointerdown', playOnce);
     });
-    initAnime3D();
-
-    // Speech bubble logic
-    const speechLines = [
-      "Hi! I'm your guide for Syllables Quest.",
-      "Click <b>Start Game</b> to begin your adventure!",
-      "Use your knowledge of syllables to win.",
-      "Good luck, hero! I'll be cheering for you!"
-    ];
-    let speechIdx = 0;
-    function showSpeech(line) {
-      document.getElementById('speechBubble').innerHTML = line;
-    }
-    function nextSpeech() {
-      speechIdx = (speechIdx + 1) % speechLines.length;
-      showSpeech(speechLines[speechIdx]);
-    }
-    // Cycle through lines every 4 seconds, or on click
-    showSpeech(speechLines[0]);
-    setInterval(nextSpeech, 4000);
-    document.getElementById('speechBubble').onclick = nextSpeech;
   </script>
 </body>
 </html>
